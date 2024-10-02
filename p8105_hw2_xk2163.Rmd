@@ -1,0 +1,79 @@
+---
+title: "p8105_hw2_xk2163"
+author: "Kang"
+date: "2024-10-01"
+output: github_document
+---
+
+```{r, message=FALSE}
+library(tidyverse)
+library(readxl)
+```
+
+
+# Problem 1
+
+line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance
+
+entry variable from character (YES vs NO) to a logical variable
+case_match
+
+explain briefly what variables ::skim
+
+dimension
+
+this data tidy?
+
+```{r}
+data_transit_df = 
+  read_csv(
+    "NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+    col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")) %>% 
+  janitor::clean_names() %>% 
+  select(
+    line, station_name, station_latitude, station_longitude, 
+    starts_with("route"), entry, exit_only, vending, entrance_type, 
+    ada) %>% 
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
+```
+
+```{r}
+skimr::skim(data_transit_df)
+```
+
+# Problem 2
+
+```{r}
+sheet_names = 
+  excel_sheets("202409 Trash Wheel Collection Data.xlsx")
+
+data2_df =bind_rows(read_excel("202409 Trash Wheel Collection Data.xlsx",
+                      skip = 1,sheet = sheet_names[1],n_max = 651) %>% 
+         mutate(name_tag = sheet_names[1],
+                Year = as.integer(Year)),
+      read_excel("202409 Trash Wheel Collection Data.xlsx",
+                      skip = 1,sheet = sheet_names[2],n_max = 118) %>% 
+         mutate(name_tag = sheet_names[2]),
+      read_excel("202409 Trash Wheel Collection Data.xlsx",
+                      skip = 1,sheet = sheet_names[4],n_max = 263) %>% 
+         mutate(name_tag = sheet_names[4]))%>% 
+  janitor::clean_names() %>% 
+  select(-dumpster) %>%
+  relocate(name_tag) %>% 
+  mutate(sports_balls = as.integer(sports_balls))
+
+
+# weight tons of Professor Trash Wheel
+data2_df %>% 
+  filter(name_tag == "Professor Trash Wheel") %>% 
+  summarize(sum(weight_tons))
+
+#the total number of cigarette butts collected by Gwynnda in June of 2022
+
+data2_df %>% 
+  filter(name_tag == "Professor Trash Wheel" &
+        month == "June" & year == 2022) %>% 
+  summarize(sum(cigarette_butts))
+```
+
+# Problem 3

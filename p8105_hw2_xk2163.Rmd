@@ -77,3 +77,60 @@ data2_df %>%
 ```
 
 # Problem 3
+
+```{r}
+data_3_1 = 
+  read_csv("gbb_datasets/bakers.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(baker = baker_name) %>% 
+  select(-baker_name) %>% 
+  separate(baker,into = c("baker","last_name"), sep = " ")
+
+data_3_2 = read_csv("gbb_datasets/bakes.csv") %>% 
+  janitor::clean_names()
+
+data_3_3 = read_csv("gbb_datasets/results.csv",skip = 2) %>% 
+  janitor::clean_names()
+
+data_3_4 = read_csv("gbb_datasets/viewers.csv") %>% 
+  pivot_longer(
+    cols = starts_with("Series"),
+    names_to = "tag",
+    values_to = "viewers") %>% 
+  separate(tag, into = c("name", "series"), sep = " ") %>% 
+  select(-name) %>% 
+  janitor::clean_names() %>% 
+  mutate(series = as.double(series))
+
+# check for completeness and correctness
+
+anti_join(data_3_1,data_3_2, by = c("baker","series"))
+
+anti_join(data_3_1,data_3_3, by = c("baker","series"))
+
+anti_join(data_3_2,data_3_3, by = c("baker","series","episode"))
+
+data3_df = 
+  data_3_1 %>%
+  full_join(data_3_2, by = c("baker","series")) %>% 
+  full_join(data_3_3, by = c("baker","series","episode"))
+
+# Clear table
+
+clear_table = 
+  data3_df %>% 
+  filter(result == "STAR BAKER" | result == "WINNER") %>% 
+  filter(series %in% c(5:10))
+
+
+#Import, clean, tidy, and organize the viewership data in viewers.csv. Show the first 10 rows of this dataset. What was the average viewership in Season 1? In Season 5?
+
+data_3_4 %>% 
+  filter(series == 1) %>% 
+  summarize(mean(viewers,na.rm = TRUE))
+
+data_3_4 %>% 
+  filter(series == 5) %>% 
+  summarize(mean(viewers,na.rm = TRUE))
+```
+
